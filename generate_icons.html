@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c"></canvas>
+<script>
+function generateIcon(size) {
+  const c = document.getElementById('c');
+  c.width = size;
+  c.height = size;
+  const ctx = c.getContext('2d');
+
+  const gradient = ctx.createLinearGradient(0, 0, size, size);
+  gradient.addColorStop(0, '#00d4ff');
+  gradient.addColorStop(1, '#7b2cbf');
+
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#fff';
+  ctx.font = `bold ${size*0.4}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('$', size/2, size/2);
+
+  return c.toDataURL();
+}
+
+console.log('16:', generateIcon(16));
+console.log('48:', generateIcon(48));
+console.log('128:', generateIcon(128));
+</script>
+</body>
+</html>
