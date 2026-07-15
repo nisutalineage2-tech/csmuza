@@ -8,6 +8,7 @@
   const $ = (sel) => document.querySelector(sel);
   const scanBtn = $('#scanBtn');
   const profitFilter = $('#profitFilter');
+  const minPrice = $('#minPrice');
   const maxPrice = $('#maxPrice');
   const progressContainer = $('#progressContainer');
   const statusText = $('#statusText');
@@ -16,6 +17,7 @@
 
   scanBtn.addEventListener('click', startScan);
   profitFilter.addEventListener('change', applyFilters);
+  minPrice.addEventListener('change', applyFilters);
   maxPrice.addEventListener('change', applyFilters);
 
   async function fetchCSFloatPriceList() {
@@ -70,10 +72,11 @@
       progressFill.style.width = '5%';
 
       const priceList = await fetchCSFloatPriceList();
+      const minPriceCents = parseInt(minPrice.value) * 100;
       const maxPriceCents = parseInt(maxPrice.value) * 100;
 
       const candidates = priceList.filter(item =>
-        item.min_price > 10 &&
+        item.min_price >= minPriceCents &&
         item.min_price <= maxPriceCents &&
         item.quantity >= 1
       );
@@ -104,9 +107,10 @@
 
         const promises = batch.map(async (item) => {
           const csfloatPrice = item.min_price / 100;
-          const steamPrice = await fetchSteamPrice(item.market_hash_name);
+          const steamPriceRaw = await fetchSteamPrice(item.market_hash_name);
 
-          if (steamPrice && steamPrice > csfloatPrice) {
+          if (steamPriceRaw && steamPriceRaw > csfloatPrice) {
+            const steamPrice = steamPriceRaw * 0.85;
             const profit = steamPrice - csfloatPrice;
             const profitPercent = ((steamPrice - csfloatPrice) / csfloatPrice) * 100;
 
@@ -227,13 +231,18 @@
   };
 
   const savedMinProfit = localStorage.getItem('profitFilter');
+  const savedMinPrice = localStorage.getItem('minPrice');
   const savedMaxPrice = localStorage.getItem('maxPrice');
   if (savedMinProfit) profitFilter.value = savedMinProfit;
+  if (savedMinPrice) minPrice.value = savedMinPrice;
   if (savedMaxPrice) maxPrice.value = savedMaxPrice;
 
   profitFilter.addEventListener('change', () => {
     localStorage.setItem('profitFilter', profitFilter.value);
     applyFilters();
+  });
+  minPrice.addEventListener('change', () => {
+    localStorage.setItem('minPrice', minPrice.value);
   });
   maxPrice.addEventListener('change', () => {
     localStorage.setItem('maxPrice', maxPrice.value);
