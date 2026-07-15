@@ -158,8 +158,14 @@
 
   function renderResults() {
     const minProfit = parseInt(profitFilter.value) || 10;
+    const minPriceVal = parseFloat(minPrice.value) || 0;
+    const maxPriceVal = parseFloat(maxPrice.value) || 9999;
 
-    const filtered = allResults.filter(r => r.profit_percent >= minProfit);
+    const filtered = allResults.filter(r =>
+      r.profit_percent >= minProfit &&
+      r.csfloat_price >= minPriceVal &&
+      r.csfloat_price <= maxPriceVal
+    );
 
     $('#totalCount').textContent = allResults.length;
     $('#profitCount').textContent = filtered.length;
