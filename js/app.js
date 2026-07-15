@@ -231,6 +231,13 @@
   if (savedMinProfit) profitFilter.value = savedMinProfit;
   if (savedMaxPrice) maxPrice.value = savedMaxPrice;
 
-  profitFilter.addEventListener('change', () => localStorage.setItem('profitFilter', profitFilter.value));
-  maxPrice.addEventListener('change', () => localStorage.setItem('maxPrice', maxPrice.value));
+  profitFilter.addEventListener('change', () => {
+    localStorage.setItem('profitFilter', profitFilter.value);
+    applyFilters();
+  });
+  maxPrice.addEventListener('change', () => {
+    localStorage.setItem('maxPrice', maxPrice.value);
+  });
+
+  startScan();
 })();
