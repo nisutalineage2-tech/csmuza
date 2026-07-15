@@ -1,13 +1,13 @@
-# CSFloat Profit Finder - Browser Extension
+# CSMuza - CS2 Skin Profit Finder
 
-Extension para Chrome/Firefox que muestra el profit de skins CS2 comparando precios de CSFloat con Steam Market.
+Extension para Chrome/Firefox que encuentra skins CS2 con profit comparando CSFloat con Steam Market.
 
 ## Como funciona
 
 1. Instalas la extension
-2. Entras a [csfloat.com](https://csfloat.com)
-3. La extension automaticamente compara precios con Steam
-4. Muestra un badge con el profit en cada skin que tenga ganancia
+2. Haces clic en "Abrir Profit Finder"
+3. Haces clic en "Escanear CSFloat"
+4. Te muestra todas las skins que tienen profit
 
 ## Instalacion
 
@@ -24,12 +24,12 @@ Extension para Chrome/Firefox que muestra el profit de skins CS2 comparando prec
 3. Clic en "Cargar componente temporal"
 4. Selecciona el archivo `manifest.json`
 
+## Auto-actualizacion
+
+La extension verifica automaticamente si hay nuevas versiones en GitHub. Cuando haya una actualizacion disponible, aparecera un banner en el popup para descargarla.
+
 ## Configuracion
 
-Click en el icono de la extension para:
-- Activar/Desactivar
-- Setear profit minimo (%)
-
-## Iconos
-
-Los iconos se generan con el script `generate_icons.html` o se pueden crear manualmente en `/icons/`.
+- **Profit Minimo (%)**: Filtra skins con menos profit
+- **Precio Maximo (USD)**: Solo busca skins hasta ese precio
+- **Auto-escaneo**: Muestra badges de profit en CSFloat

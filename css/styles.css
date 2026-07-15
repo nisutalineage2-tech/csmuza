@@ -1,4 +1,4 @@
-.csfloat-profit-badge {
+.csmuza-profit-badge {
   position: absolute;
   bottom: 5px;
   right: 5px;
@@ -63,7 +63,7 @@
   font-size: 12px;
 }
 
-#csfloat-profit-indicator {
+#csmuza-indicator {
   position: fixed;
   top: 10px;
   right: 10px;
@@ -80,7 +80,7 @@
   transition: all 0.2s ease;
 }
 
-#csfloat-profit-indicator:hover {
+#csmuza-indicator:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
 }

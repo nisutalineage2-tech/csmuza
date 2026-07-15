@@ -31,7 +31,7 @@
     if (profitPercent < config.profitMin) return null;
 
     const badge = document.createElement('div');
-    badge.className = 'csfloat-profit-badge';
+    badge.className = 'csmuza-profit-badge';
 
     const color = profitPercent >= 30 ? '#00ff88' :
                   profitPercent >= 20 ? '#88ff00' :
@@ -153,15 +153,15 @@
   }
 
   function addGlobalIndicator() {
-    const existing = document.getElementById('csfloat-profit-indicator');
+    const existing = document.getElementById('csmuza-indicator');
     if (existing) existing.remove();
 
     const indicator = document.createElement('div');
-    indicator.id = 'csfloat-profit-indicator';
+    indicator.id = 'csmuza-indicator';
     indicator.innerHTML = `
       <div class="indicator-content">
         <span class="indicator-dot ${config.enabled ? 'active' : 'paused'}"></span>
-        <span>Profit Finder: ${config.enabled ? 'ON' : 'OFF'}</span>
+        <span>CSMuza: ${config.enabled ? 'ON' : 'OFF'}</span>
         <span class="indicator-min">Min: ${config.profitMin}%</span>
       </div>
     `;
@@ -189,7 +189,7 @@
     if (request.action === 'configUpdated') {
       loadConfig().then(() => {
         addGlobalIndicator();
-        document.querySelectorAll('.csfloat-profit-badge').forEach(b => b.remove());
+        document.querySelectorAll('.csmuza-profit-badge').forEach(b => b.remove());
         processedListings.clear();
         processListings();
       });
