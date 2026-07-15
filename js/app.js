@@ -3,6 +3,7 @@
 
   let allResults = [];
   let steamCache = {};
+  let scanning = false;
 
   const $ = (sel) => document.querySelector(sel);
   const scanBtn = $('#scanBtn');
@@ -24,13 +25,19 @@
   }
 
   async function fetchSteamPrice(name) {
-    if (steamCache[name] && Date.now() - steamCache[name].time < 600000) {
+    if (steamCache[name] && Date.now() - steamCache[name].time < 1800000) {
       return steamCache[name].price;
     }
 
     try {
       const url = `https://steamcommunity.com/market/priceoverview/?appid=730&currency=1&market_hash_name=${encodeURIComponent(name)}`;
       const resp = await fetch(url);
+
+      if (resp.status === 429) {
+        await new Promise(r => setTimeout(r, 10000));
+        return null;
+      }
+
       const data = await resp.json();
 
       let price = null;
@@ -50,62 +57,84 @@
   }
 
   async function startScan() {
+    if (scanning) return;
+    scanning = true;
+
     scanBtn.disabled = true;
     scanBtn.textContent = 'Escaneando...';
     progressContainer.style.display = 'block';
     resultsContainer.innerHTML = '<div class="loading">Cargando precios de CSFloat...</div>';
 
     try {
-      statusText.textContent = 'Cargando precios de CSFloat...';
-      progressFill.style.width = '10%';
+      statusText.textContent = 'Cargando lista de precios de CSFloat...';
+      progressFill.style.width = '5%';
 
       const priceList = await fetchCSFloatPriceList();
       const maxPriceCents = parseInt(maxPrice.value) * 100;
 
-      const filtered = priceList.filter(item =>
-        item.min_price > 50 &&
+      const candidates = priceList.filter(item =>
+        item.min_price > 10 &&
         item.min_price <= maxPriceCents &&
-        item.quantity >= 2
+        item.quantity >= 1
       );
 
-      filtered.sort((a, b) => a.min_price - b.min_price);
-      const toCheck = filtered.slice(0, 100);
+      candidates.sort((a, b) => {
+        const scoreA = (a.quantity || 1) * (1 / (a.min_price || 1));
+        const scoreB = (b.quantity || 1) * (1 / (b.min_price || 1));
+        return scoreB - scoreA;
+      });
 
-      statusText.textContent = `Verificando ${toCheck.length} skins en Steam...`;
+      const BATCH_SIZE = 10;
+      const STEAM_DELAY = 1800;
+      const MAX_ITEMS = Math.min(candidates.length, 500);
+
+      statusText.textContent = `Verificando ${MAX_ITEMS} skins en Steam (lotes de ${BATCH_SIZE})...`;
       allResults = [];
 
-      for (let i = 0; i < toCheck.length; i++) {
-        const item = toCheck[i];
-        const csfloatPrice = item.min_price / 100;
+      for (let i = 0; i < MAX_ITEMS; i += BATCH_SIZE) {
+        if (!scanning) break;
 
-        progressFill.style.width = `${10 + (i / toCheck.length) * 85}%`;
-        statusText.textContent = `Verificando ${i + 1}/${toCheck.length}: ${item.market_hash_name}`;
+        const batch = candidates.slice(i, i + BATCH_SIZE);
+        const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+        const totalBatches = Math.ceil(MAX_ITEMS / BATCH_SIZE);
 
-        const steamPrice = await fetchSteamPrice(item.market_hash_name);
+        const progress = 5 + (i / MAX_ITEMS) * 90;
+        progressFill.style.width = `${progress}%`;
+        statusText.textContent = `Lote ${batchNum}/${totalBatches} | Verificando ${batch.length} skins...`;
 
-        if (steamPrice && steamPrice > csfloatPrice) {
-          const profit = steamPrice - csfloatPrice;
-          const profitPercent = ((steamPrice - csfloatPrice) / csfloatPrice) * 100;
+        const promises = batch.map(async (item) => {
+          const csfloatPrice = item.min_price / 100;
+          const steamPrice = await fetchSteamPrice(item.market_hash_name);
 
-          allResults.push({
-            market_name: item.market_hash_name,
-            csfloat_price: csfloatPrice,
-            steam_price: steamPrice,
-            profit_usd: profit,
-            profit_percent: profitPercent,
-            quantity: item.quantity
-          });
-        }
+          if (steamPrice && steamPrice > csfloatPrice) {
+            const profit = steamPrice - csfloatPrice;
+            const profitPercent = ((steamPrice - csfloatPrice) / csfloatPrice) * 100;
 
-        if (i % 5 === 0) {
-          await new Promise(r => setTimeout(r, 1500));
-        }
+            return {
+              market_name: item.market_hash_name,
+              csfloat_price: csfloatPrice,
+              steam_price: steamPrice,
+              profit_usd: profit,
+              profit_percent: profitPercent,
+              quantity: item.quantity
+            };
+          }
+          return null;
+        });
+
+        const batchResults = await Promise.all(promises);
+        batchResults.filter(Boolean).forEach(r => allResults.push(r));
+
+        allResults.sort((a, b) => b.profit_usd - a.profit_usd);
+        renderResults();
+
+        await new Promise(r => setTimeout(r, STEAM_DELAY));
       }
 
       allResults.sort((a, b) => b.profit_usd - a.profit_usd);
 
       progressFill.style.width = '100%';
-      statusText.textContent = `Completado: ${allResults.length} skins con profit encontradas`;
+      statusText.textContent = `Completado: ${allResults.length} skins con profit de ${MAX_ITEMS} verificadas`;
 
       renderResults();
 
@@ -116,6 +145,7 @@
 
     scanBtn.disabled = false;
     scanBtn.textContent = 'Escanear CSFloat';
+    scanning = false;
   }
 
   function applyFilters() {
@@ -133,7 +163,7 @@
     if (filtered.length === 0) {
       resultsContainer.innerHTML = `
         <div class="empty-state">
-          <h3>Sin resultados</h3>
+          <h3>Sin resultados aun</h3>
           <p>Haz clic en "Escanear CSFloat" para buscar oportunidades</p>
         </div>
       `;
@@ -157,8 +187,8 @@
               <th onclick="sortTable('market_name')">Skin</th>
               <th onclick="sortTable('csfloat_price')">CSFloat</th>
               <th onclick="sortTable('steam_price')">Steam</th>
-              <th onclick="sortTable('profit_usd')">Profit</th>
-              <th onclick="sortTable('profit_percent')">% </th>
+              <th onclick="sortTable('profit_usd')">Profit $</th>
+              <th onclick="sortTable('profit_percent')">Profit %</th>
               <th onclick="sortTable('quantity')">Stock</th>
               <th></th>
             </tr>
