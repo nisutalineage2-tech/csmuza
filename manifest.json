@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
   "name": "CSFloat Profit Finder",
-  "version": "1.0.0",
-  "description": "Muestra el profit de skins CS2 comparando CSFloat con Steam Market",
+  "version": "1.1.0",
+  "description": "Encuentra skins CS2 con profit entre CSFloat y Steam Market",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "tabs"
   ],
   "host_permissions": [
     "https://csfloat.com/*",
@@ -34,5 +35,11 @@
   ],
   "background": {
     "scripts": ["js/background.js"]
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["app.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

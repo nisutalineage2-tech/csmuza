@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSFloat Profit Finder</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a1a;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      text-align: center;
+      padding: 30px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 5px;
+    }
+
+    .subtitle { color: #888; font-size: 1rem; }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+      color: #fff;
+    }
+
+    .btn-primary:hover { box-shadow: 0 4px 15px rgba(0,212,255,0.3); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+    .filter-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .filter-group label {
+      color: #888;
+      font-size: 0.85rem;
+    }
+
+    .filter-group input, .filter-group select {
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font-size: 0.9rem;
+    }
+
+    .filter-group input:focus, .filter-group select:focus {
+      outline: none;
+      border-color: #00d4ff;
+    }
+
+    .stats {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 15px 20px;
+      flex: 1;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #00d4ff;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #888;
+    }
+
+    .loading::after {
+      content: '';
+      display: block;
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: #00d4ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 15px auto 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #888;
+    }
+
+    .empty-state h3 { color: #fff; margin-bottom: 10px; }
+
+    .table-wrapper {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    th {
+      background: rgba(0,0,0,0.3);
+      color: #00d4ff;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    th:hover { background: rgba(0,212,255,0.1); }
+    th.sorted { color: #fff; }
+
+    tr:hover { background: rgba(255,255,255,0.03); }
+
+    .skin-name { font-weight: 600; color: #fff; }
+
+    .price-csfloat { color: #00d4ff; font-weight: 600; }
+    .price-steam { color: #888; }
+
+    .profit-positive {
+      color: #00ff88;
+      font-weight: 700;
+    }
+
+    .profit-high {
+      color: #00ff88;
+      font-weight: 700;
+      text-shadow: 0 0 8px rgba(0,255,136,0.4);
+    }
+
+    .qty { color: #666; font-size: 0.85rem; }
+
+    .action-link {
+      color: #00d4ff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+
+    .action-link:hover { color: #7b2cbf; }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    .status-text {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 10px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      margin-top: 40px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      color: #444;
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 768px) {
+      .controls { flex-direction: column; }
+      .filter-group { flex-wrap: wrap; }
+      .stats { flex-direction: column; }
+      .table-wrapper { overflow-x: auto; }
+      table { min-width: 700px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>CSFloat Profit Finder</h1>
+      <p class="subtitle">Skins baratas con profit entre CSFloat y Steam</p>
+    </header>
+
+    <div class="controls">
+      <button class="btn btn-primary" id="scanBtn">Escanear CSFloat</button>
+      <div class="filter-group">
+        <label>Profit min:</label>
+        <input type="number" id="profitFilter" value="10" min="1" max="100" style="width:70px">
+        <label>%</label>
+      </div>
+      <div class="filter-group">
+        <label>Precio max:</label>
+        <input type="number" id="maxPrice" value="50" min="1" max="500" style="width:70px">
+        <label>USD</label>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value" id="totalCount">0</div>
+        <div class="stat-label">Skins verificadas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="profitCount">0</div>
+        <div class="stat-label">Con profit</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="avgProfit">$0</div>
+        <div class="stat-label">Profit promedio</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="maxProfit">$0</div>
+        <div class="stat-label">Mayor profit</div>
+      </div>
+    </div>
+
+    <div id="progressContainer" style="display:none">
+      <div class="status-text" id="statusText">Cargando precios de CSFloat...</div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div id="resultsContainer">
+      <div class="empty-state">
+        <h3>Haz clic en "Escanear CSFloat"</h3>
+        <p>Se consultarán los precios de CSFloat y se compararán con Steam</p>
+      </div>
+    </div>
+
+    <footer>
+      CSFloat Profit Finder v1.0 | Datos de CSFloat y Steam Community Market
+    </footer>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
